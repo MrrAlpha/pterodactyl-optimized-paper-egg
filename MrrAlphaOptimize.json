@@ -1,0 +1,89 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": null
+    },
+    "exported_at": "2023-11-20T04:06:51+01:00",
+    "name": "Alpha Paper",
+    "author": "deoxy004@gmail.com",
+    "description": "Optimized paper being developed by MrrAlpha. Fork of the original paper egg by parkervcp",
+    "features": [
+        "eula"
+    ],
+    "docker_images": {
+        "ghcr.io\/pterodactyl\/yolks:java_19": "ghcr.io\/pterodactyl\/yolks:java_19",
+        "ghcr.io\/pterodactyl\/yolks:java_18": "ghcr.io\/pterodactyl\/yolks:java_18",
+        "ghcr.io\/pterodactyl\/yolks:java_17": "ghcr.io\/pterodactyl\/yolks:java_17",
+        "ghcr.io\/pterodactyl\/yolks:java_16": "ghcr.io\/pterodactyl\/yolks:java_16",
+        "ghcr.io\/pterodactyl\/yolks:java_11": "ghcr.io\/pterodactyl\/yolks:java_11",
+        "ghcr.io\/pterodactyl\/yolks:java_8": "ghcr.io\/pterodactyl\/yolks:java_8"
+    },
+    "file_denylist": [],
+    "startup": "java -Xms256M -Xmx$(({{SERVER_MEMORY}} - ({{SERVER_MEMORY}}\/10)))M -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -XX:G1NewSizePercent=30 -XX:G1MaxNewSizePercent=40 -XX:G1HeapRegionSize=8M -XX:G1ReservePercent=20 -XX:G1HeapWastePercent=5 -XX:G1MixedGCCountTarget=4 -XX:InitiatingHeapOccupancyPercent=15 -XX:G1MixedGCLiveThresholdPercent=90 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:SurvivorRatio=32 -XX:+PerfDisableSharedMem -XX:MaxTenuringThreshold=1 -Dusing.aikars.flags=https:\/\/mcflags.emc.gs -Daikars.new.flags=true -jar {{SERVER_JARFILE}}",
+    "config": {
+        "files": "{\r\n    \"server.properties\": {\r\n        \"parser\": \"properties\",\r\n        \"find\": {\r\n            \"server-ip\": \"0.0.0.0\",\r\n            \"server-port\": \"{{server.build.default.port}}\"\r\n        }\r\n    }\r\n}",
+        "startup": "{\r\n    \"done\": \")! For help, type \",\r\n    \"userInteraction\": [\r\n        \"Go to eula.txt for more info.\"\r\n    ]\r\n}",
+        "logs": "{}",
+        "stop": "stop"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/ash\n# Paper Installation Script\n#\n# Server Files: /mnt/server\nPROJECT=paper\n\nif [ -n \"${DL_PATH}\" ]; then\n  echo -e \"Using supplied download url: ${DL_PATH}\"\n  DOWNLOAD_URL=`eval echo $(echo ${DL_PATH} | sed -e 's/{{/${/g' -e 's/}}/}/g')`\nelse\n  VER_EXISTS=`curl -s https://papermc.io/api/v2/projects/${PROJECT} | jq -r --arg VERSION $MINECRAFT_VERSION '.versions[] | contains($VERSION)' | grep true`\n  LATEST_VERSION=`curl -s https://papermc.io/api/v2/projects/${PROJECT} | jq -r '.versions' | jq -r '.[-1]'`\n\n  if [ \"${VER_EXISTS}\" == \"true\" ]; then\n    echo -e \"Version is valid. Using version ${MINECRAFT_VERSION}\"\n  else\n    echo -e \"Using the latest ${PROJECT} version\"\n    MINECRAFT_VERSION=${LATEST_VERSION}\n  fi\n\n  BUILD_EXISTS=`curl -s https://papermc.io/api/v2/projects/${PROJECT}/versions/${MINECRAFT_VERSION} | jq -r --arg BUILD ${BUILD_NUMBER} '.builds[] | tostring | contains($BUILD)' | grep true`\n  LATEST_BUILD=`curl -s https://papermc.io/api/v2/projects/${PROJECT}/versions/${MINECRAFT_VERSION} | jq -r '.builds' | jq -r '.[-1]'`\n\n  if [ \"${BUILD_EXISTS}\" == \"true\" ]; then\n    echo -e \"Build is valid for version ${MINECRAFT_VERSION}. Using build ${BUILD_NUMBER}\"\n  else\n    echo -e \"Using the latest ${PROJECT} build for version ${MINECRAFT_VERSION}\"\n    BUILD_NUMBER=${LATEST_BUILD}\n  fi\n\n  JAR_NAME=${PROJECT}-${MINECRAFT_VERSION}-${BUILD_NUMBER}.jar\n\n  echo \"Version being downloaded\"\n  echo -e \"MC Version: ${MINECRAFT_VERSION}\"\n  echo -e \"Build: ${BUILD_NUMBER}\"\n  echo -e \"JAR Name of Build: ${JAR_NAME}\"\n  DOWNLOAD_URL=https://papermc.io/api/v2/projects/${PROJECT}/versions/${MINECRAFT_VERSION}/builds/${BUILD_NUMBER}/downloads/${JAR_NAME}\nfi\n\ncd /mnt/server\n\necho -e \"Running curl -o ${SERVER_JARFILE} ${DOWNLOAD_URL}\"\n\nif [ -f ${SERVER_JARFILE} ]; then\n  mv ${SERVER_JARFILE} ${SERVER_JARFILE}.old\nfi\ncurl -o ${SERVER_JARFILE} ${DOWNLOAD_URL}\n\nif [ ! -f server.properties ]; then\n  echo -e \"Downloading MC server.properties\"\n  curl -o server.properties https://raw.githubusercontent.com/flaxeneel2/pterodactyl-optimized-paper-egg/main/server.properties\nfi\n\nif [ ! -f paper.yml ]; then\n  echo -e \"Downloading MC paper.yml\"\n  curl -o paper.yml https://raw.githubusercontent.com/flaxeneel2/pterodactyl-optimized-paper-egg/main/paper.yml\nfi\n\nif [ ! -f spigot.yml ]; then\n  echo -e \"Downloading MC spigot.yml\"\n  curl -o spigot.yml https://raw.githubusercontent.com/flaxeneel2/pterodactyl-optimized-paper-egg/main/spigot.yml\nfi\n\nif [ ! -f bukkit.yml ]; then\n  echo -e \"Downloading MC bukkit.yml\"\n  curl",
+            "container": "ghcr.io\/pterodactyl\/installers:alpine",
+            "entrypoint": "ash"
+        }
+    },
+    "variables": [
+        {
+            "name": "Minecraft Version",
+            "description": "The version of minecraft to download. \r\n\r\nLeave at latest to always get the latest version. Invalid versions will default to latest.",
+            "env_variable": "MINECRAFT_VERSION",
+            "default_value": "latest",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:20",
+            "field_type": "text"
+        },
+        {
+            "name": "Server Jar File",
+            "description": "The name of the server jarfile to run the server with.",
+            "env_variable": "SERVER_JARFILE",
+            "default_value": "server.jar",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        },
+        {
+            "name": "Download Path",
+            "description": "A URL to use to download a server.jar rather than the ones in the install script. This is not user viewable.",
+            "env_variable": "DL_PATH",
+            "default_value": "",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "nullable|string",
+            "field_type": "text"
+        },
+        {
+            "name": "Build Number",
+            "description": "The build number for the paper release.\r\n\r\nLeave at latest to always get the latest version. Invalid versions will default to latest.",
+            "env_variable": "BUILD_NUMBER",
+            "default_value": "latest",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        },
+        {
+            "name": "Smart startup",
+            "description": "Compensate for jvm overhead",
+            "env_variable": "SMART_STARTUP",
+            "default_value": "true",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        }
+    ]
+}
